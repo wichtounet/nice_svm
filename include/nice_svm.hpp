@@ -135,6 +135,32 @@ void parallel_shuffle(IT1 first_1, IT1 last_1, IT2 first_2, IT2 last_2, RNG&& g)
 }
 
 template<typename Labels, typename Images>
+problem make_problem(const Labels& labels, const Images& samples){
+    assert(labels.size() == samples.size());
+
+    auto n_samples = labels.size();
+
+    problem problem(n_samples, samples.front().size());
+
+    for(std::size_t s = 0; s < n_samples; ++s){
+        auto features = samples[s].size();
+
+        problem.label(s) = labels[s];
+
+        for(std::size_t i = 0; i < features; ++i){
+            problem.sample(s)[i].index = i+1;
+            problem.sample(s)[i].value = samples[s][i];
+        }
+
+        //End the vector
+        problem.sample(s)[features].index = -1;
+        problem.sample(s)[features].value = 0.0;
+    }
+
+    return problem;
+}
+
+template<typename Labels, typename Images>
 problem make_problem(Labels& labels, Images& samples, std::size_t max = 0, bool shuffle = true){
     assert(labels.size() == samples.size());
 
