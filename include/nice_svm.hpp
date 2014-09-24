@@ -263,12 +263,12 @@ typename std::enable_if<std::is_same<typename Sample::value_type, double>::value
 }
 
 inline void test_model(problem& problem, model& model){
-    double prob_estimates[10]; //TODO 10 is not fixed
+    std::vector<double> prob_estimates(model.classes());
 
     std::size_t correct = 0;
 
     for(std::size_t s = 0; s < problem.n_samples; ++s){
-        auto label = svm_predict_probability(model.get_model(), problem.sample(s), prob_estimates);
+        auto label = svm_predict_probability(model.get_model(), problem.sample(s), &prob_estimates[0]);
 
         if(label == problem.label(s)){
             ++correct;
