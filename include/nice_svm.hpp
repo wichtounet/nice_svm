@@ -220,11 +220,29 @@ inline svm_parameter default_parameters(){
     return parameters;
 }
 
-template<typename Sample>
-double predict(model& model, const Sample& sample){
+inline double predict(model& model, const svm_node* sample){
     std::vector<double> prob_estimates(model.classes());
 
     return svm_predict_probability(model.get_model(), sample, &prob_estimates[0]);
+}
+
+template<typename Sample>
+typename std::enable_if<std::is_same<typename Sample::value_type, double>::value, double>::type predict(model& model, const Sample& sample){
+    std::vector<double> prob_estimates(model.classes());
+
+    auto features = sample.size();
+    std::vector<svm_node> svm_sample(features+1);
+
+    for(std::size_t i = 0; i < features; ++i){
+        svm_sample[i].index = i+1;
+        svm_sample[i].value = sample[i];
+    }
+
+    //End the vector
+    svm_sample[features].index = -1;
+    svm_sample[features].value = 0.0;
+
+    return svm_predict_probability(model.get_model(), &svm_sample[0], &prob_estimates[0]);
 }
 
 inline void test_model(problem& problem, model& model){
