@@ -116,6 +116,7 @@ struct model {
 template<typename IT1, typename IT2, typename RNG>
 void parallel_shuffle(IT1 first_1, IT1 last_1, IT2 first_2, IT2 last_2, RNG&& g){
     assert(std::distance(first_1, last_1) == std::distance(first_2, last_2));
+    ((void)last_2); //Ensure no warning is issued for last_2 (used only in debug mode)
 
     typedef typename std::iterator_traits<IT1>::difference_type diff_t;
     typedef typename std::make_unsigned<diff_t>::type udiff_t;
