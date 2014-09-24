@@ -194,6 +194,13 @@ inline svm_parameter default_parameters(){
     return parameters;
 }
 
+template<typename Sample>
+double predict(model& model, const Sample& sample){
+    std::vector<double> prob_estimates(model.classes());
+
+    return svm_predict_probability(model.get_model(), sample, &prob_estimates[0]);
+}
+
 inline void test_model(problem& problem, model& model){
     double prob_estimates[10]; //TODO 10 is not fixed
 
