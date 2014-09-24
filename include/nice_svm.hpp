@@ -17,8 +17,8 @@
 namespace svm {
 
 struct problem {
-    std::size_t n_features;
     std::size_t n_samples;
+    std::size_t n_features;
     svm_problem sub;
 
     problem(std::size_t n_samples, std::size_t n_features) :
@@ -277,7 +277,7 @@ inline bool save(const model& model, const std::string& file_name){
     return !svm_save_model(file_name.c_str(), model.get_model());
 }
 
-inline void print_null(const char *s) {}
+inline void print_null(const char* /*s*/) {}
 
 inline void make_quiet(){
     svm_set_print_string_function(&print_null);
