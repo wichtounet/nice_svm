@@ -21,6 +21,10 @@ struct problem {
     std::size_t n_features;
     svm_problem sub;
 
+    problem() : n_samples(0), n_features(0), sub({0, nullptr, nullptr}) {
+        //Nothing to init
+    }
+
     problem(std::size_t n_samples, std::size_t n_features) :
             n_samples(n_samples),
             n_features(n_features),
@@ -39,6 +43,19 @@ struct problem {
             sub({rhs.sub.l, rhs.sub.y, rhs.sub.x}){
         rhs.sub.x = nullptr;
         rhs.sub.y = nullptr;
+    }
+
+    problem& operator=(problem&& rhs){
+        n_samples = rhs.n_samples;
+        n_features = rhs.n_features;
+        sub.l = rhs.sub.l;
+        sub.x = rhs.sub.x;
+        sub.y = rhs.sub.y;
+
+        rhs.sub.x = nullptr;
+        rhs.sub.y = nullptr;
+
+        return *this;
     }
 
     ~problem(){
