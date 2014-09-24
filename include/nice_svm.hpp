@@ -72,6 +72,47 @@ struct problem {
     }
 };
 
+struct model {
+    svm_model* sub = nullptr;
+
+    model() = default;
+
+    model(svm_model* sub) : sub(sub) {}
+
+    model(model&& rhs) : sub(rhs.sub){
+        rhs.sub = nullptr;
+    }
+
+    model& operator=(model&& rhs){
+        sub = rhs.sub;
+        rhs.sub = nullptr;
+
+        return *this;
+    }
+
+    ~model(){
+        if(sub){
+            svm_free_and_destroy_model(&sub);
+        }
+    }
+
+    svm_model* get_model(){
+        return sub;
+    }
+
+    std::size_t classes(){
+        return svm_get_nr_class(sub);
+    }
+
+    const svm_model* get_model() const {
+        return sub;
+    }
+
+    operator bool(){
+        return sub;
+    }
+};
+
 template<typename IT1, typename IT2, typename RNG>
 void parallel_shuffle(IT1 first_1, IT1 last_1, IT2 first_2, IT2 last_2, RNG&& g){
     assert(std::distance(first_1, last_1) == std::distance(first_2, last_2));
@@ -152,13 +193,13 @@ inline svm_parameter default_parameters(){
     return parameters;
 }
 
-inline void test_model(problem& problem, svm_model* model){
+inline void test_model(problem& problem, model& model){
     double prob_estimates[10]; //TODO 10 is not fixed
 
     std::size_t correct = 0;
 
     for(std::size_t s = 0; s < problem.n_samples; ++s){
-        auto label = svm_predict_probability(model, problem.sample(s), prob_estimates);
+        auto label = svm_predict_probability(model.get_model(), problem.sample(s), prob_estimates);
 
         if(label == problem.label(s)){
             ++correct;
@@ -216,6 +257,30 @@ inline bool check(const problem& problem, const svm_parameter& parameters){
     }
 
     return true;
+}
+
+inline model load(const std::string& file_name){
+    std::cout << "Load SVM model" << std::endl;
+
+    auto model = svm_load_model(file_name.c_str());
+
+    if(!model){
+        std::cout << "Impossible to load model" << std::endl;
+    } else {
+        std::cout << "SVM model loaded" << std::endl;
+    }
+
+    return {model};
+}
+
+inline bool save(const model& model, const std::string& file_name){
+    return !svm_save_model(file_name.c_str(), model.get_model());
+}
+
+inline void print_null(const char *s) {}
+
+inline void make_quiet(){
+    svm_set_print_string_function(&print_null);
 }
 
 } //end of namespace svm
