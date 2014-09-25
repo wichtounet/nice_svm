@@ -291,8 +291,10 @@ inline svm_model* train(problem& problem, svm_parameter& parameters){
     return model;
 }
 
-inline double cross_validate(problem& problem, svm_parameter& parameters, std::size_t n_fold){
-    std::cout << "Cross validation" << std::endl;
+inline double cross_validate(problem& problem, svm_parameter& parameters, std::size_t n_fold, bool quiet = false){
+    if(!quiet){
+        std::cout << "Cross validation" << std::endl;
+    }
 
     double *target = new double[problem.n_samples];
 
@@ -306,14 +308,16 @@ inline double cross_validate(problem& problem, svm_parameter& parameters, std::s
         }
     }
 
-    std::cout << "Cross validation Samples: " << problem.n_samples << std::endl;
-    std::cout << "Cross validation Correct: " << cross_correct << std::endl;
-    std::cout << "Cross validation Accuracy: " << (100.0 * cross_correct / problem.n_samples) << "%" << std::endl;
-    std::cout << "Cross validation Error: " << (100.0 - (100.0 * cross_correct / problem.n_samples)) << "%" << std::endl;
+    if(!quiet){
+        std::cout << "Cross validation Samples: " << problem.n_samples << std::endl;
+        std::cout << "Cross validation Correct: " << cross_correct << std::endl;
+        std::cout << "Cross validation Accuracy: " << (100.0 * cross_correct / problem.n_samples) << "%" << std::endl;
+        std::cout << "Cross validation Error: " << (100.0 - (100.0 * cross_correct / problem.n_samples)) << "%" << std::endl;
+
+        std::cout << "Cross validation done" << std::endl;
+    }
 
     delete[] target;
-
-    std::cout << "Cross validation done" << std::endl;
 
     return 100.0 * cross_correct / problem.n_samples;
 }
