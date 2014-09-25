@@ -291,7 +291,7 @@ inline svm_model* train(problem& problem, svm_parameter& parameters){
     return model;
 }
 
-inline void cross_validate(problem& problem, svm_parameter& parameters, std::size_t n_fold){
+inline double cross_validate(problem& problem, svm_parameter& parameters, std::size_t n_fold){
     std::cout << "Cross validation" << std::endl;
 
     double *target = new double[problem.n_samples];
@@ -314,6 +314,8 @@ inline void cross_validate(problem& problem, svm_parameter& parameters, std::siz
     delete[] target;
 
     std::cout << "Cross validation done" << std::endl;
+
+    return 100.0 * cross_correct / problem.n_samples;
 }
 
 inline bool check(const problem& problem, const svm_parameter& parameters){
