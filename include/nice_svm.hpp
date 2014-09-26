@@ -358,16 +358,6 @@ inline void make_quiet(){
     svm_set_print_string_function(&print_null);
 }
 
-struct rbf_grid {
-    double c_first = 2e-5;
-    double c_last = 2e-15;
-    double c_steps = 10;
-
-    double gamma_first = 2e-15;
-    double gamma_last = 2e3;
-    double gamma_steps = 10;
-};
-
 inline void rbf_grid_search(svm::problem& problem, const svm_parameter& parameters, std::size_t n_fold, const std::vector<double>& c_values, const std::vector<double>& gamma_values){
     std::cout << "Grid Search" << std::endl;
 
@@ -396,6 +386,23 @@ inline void rbf_grid_search(svm::problem& problem, const svm_parameter& paramete
 
     std::cout << "Best: C=" << max_C << ",y=" << max_gamma << " -> " << max_accuracy << std::endl;
 }
+
+class enum grid_search_type {
+    LINEAR,
+    EXP
+};
+
+struct rbf_grid {
+    grid_search_type type = grid_search_type::EXP;
+
+    double c_first = 2e-5;
+    double c_last = 2e-15;
+    double c_steps = 10;
+
+    double gamma_first = 2e-15;
+    double gamma_last = 2e3;
+    double gamma_steps = 10;
+};
 
 inline void rbf_grid_search_exp(svm::problem& problem, const svm_parameter& parameters, std::size_t n_fold, const rbf_grid& g = rbf_grid()){
     std::vector<double> c_values(g.c_steps);
@@ -435,6 +442,15 @@ inline void rbf_grid_search_lin(svm::problem& problem, const svm_parameter& para
     }
 
     rbf_grid_search(problem, parameters, n_fold, c_values, gamma_values);
+}
+
+inline void rbf_grid_search(svm::problem& problem, const svm_parameter& parameters, std::size_t n_fold, const rbf_grid& g = rbf_grid()){
+    switch(g.type){
+        case grid_search_type::LINEAR:
+            rbf_grid_search_lin(problem, parameters, n_fold, g);
+        case grid_search_type::EXP:
+            rbf_grid_search_exp(problem, parameters, n_fold, g);
+    }
 }
 
 } //end of namespace svm
