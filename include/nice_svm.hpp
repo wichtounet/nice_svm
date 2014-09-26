@@ -387,7 +387,7 @@ inline void rbf_grid_search(svm::problem& problem, const svm_parameter& paramete
     std::cout << "Best: C=" << max_C << ",y=" << max_gamma << " -> " << max_accuracy << std::endl;
 }
 
-class enum grid_search_type {
+enum class grid_search_type {
     LINEAR,
     EXP
 };
