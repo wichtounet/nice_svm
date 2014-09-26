@@ -281,7 +281,7 @@ inline void test_model(problem& problem, model& model){
     std::cout << "Error: " << (100.0 - (100.0 * correct / problem.n_samples)) << "%" << std::endl;
 }
 
-inline svm_model* train(problem& problem, svm_parameter& parameters){
+inline svm_model* train(problem& problem, const svm_parameter& parameters){
     std::cout << "Train SVM: " << problem.n_samples << " samples" << std::endl;
 
     auto model = svm_train(&problem.get_problem(), &parameters);
@@ -291,7 +291,7 @@ inline svm_model* train(problem& problem, svm_parameter& parameters){
     return model;
 }
 
-inline double cross_validate(problem& problem, svm_parameter& parameters, std::size_t n_fold, bool quiet = false){
+inline double cross_validate(problem& problem, const svm_parameter& parameters, std::size_t n_fold, bool quiet = false){
     if(!quiet){
         std::cout << "Cross validation" << std::endl;
     }
@@ -368,7 +368,7 @@ struct rbf_grid {
     double gamma_steps = 10;
 };
 
-inline void rbf_grid_search(svm::problem& problem, svm_parameter& parameters, std::size_t n_fold, const std::vector<double>& c_values, const std::vector<double>& gamma_values){
+inline void rbf_grid_search(svm::problem& problem, const svm_parameter& parameters, std::size_t n_fold, const std::vector<double>& c_values, const std::vector<double>& gamma_values){
     std::cout << "Grid Search" << std::endl;
 
     double max_accuracy = 0.0;
@@ -397,7 +397,7 @@ inline void rbf_grid_search(svm::problem& problem, svm_parameter& parameters, st
     std::cout << "Best: C=" << max_C << ",y=" << max_gamma << " -> " << max_accuracy << std::endl;
 }
 
-inline void rbf_grid_search_exp(svm::problem& problem, svm_parameter& parameters, std::size_t n_fold, const rbf_grid& g = rbf_grid()){
+inline void rbf_grid_search_exp(svm::problem& problem, const svm_parameter& parameters, std::size_t n_fold, const rbf_grid& g = rbf_grid()){
     std::vector<double> c_values(g.c_steps);
     std::vector<double> gamma_values(g.gamma_steps);
 
@@ -417,7 +417,7 @@ inline void rbf_grid_search_exp(svm::problem& problem, svm_parameter& parameters
     rbf_grid_search(problem, parameters, n_fold, c_values, gamma_values);
 }
 
-inline void rbf_grid_search_lin(svm::problem& problem, svm_parameter& parameters, std::size_t n_fold, const rbf_grid& g = rbf_grid()){
+inline void rbf_grid_search_lin(svm::problem& problem, const svm_parameter& parameters, std::size_t n_fold, const rbf_grid& g = rbf_grid()){
     std::vector<double> c_values(g.c_steps);
     std::vector<double> gamma_values(g.gamma_steps);
 
