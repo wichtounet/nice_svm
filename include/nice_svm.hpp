@@ -396,7 +396,7 @@ struct rbf_grid {
     grid_search_type type = grid_search_type::EXP;
 
     double c_first = 2e-5;
-    double c_last = 2e-15;
+    double c_last = 2e15;
     double c_steps = 10;
 
     double gamma_first = 2e-15;
