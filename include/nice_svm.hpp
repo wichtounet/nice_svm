@@ -154,17 +154,18 @@ void parallel_shuffle(IT1 first_1, IT1 last_1, IT2 first_2, IT2 last_2, RNG&& g)
 template<typename LIterator, typename IIterator>
 problem make_problem(LIterator lfirst, LIterator llast, IIterator ifirst, IIterator ilast){
     assert(std::distance(lfirst, llast) == std::distance(ifirst, ilast));
+    ((void)ilast); //Ensure no warning is issued for ilast (used only in debug mode)
 
     auto n_samples = std::distance(lfirst, llast);
 
-    problem problem(n_samples, first->size());
+    problem problem(n_samples, ifirst->size());
+
+    std::size_t s = 0;
 
     while(lfirst != llast){
-
-    for(std::size_t s = 0; s < n_samples; ++s){
-        auto features = ifirst->size();
-
         problem.label(s) = *lfirst;
+
+        auto features = ifirst->size();
 
         for(std::size_t i = 0; i < features; ++i){
             problem.sample(s)[i].index = i+1;
@@ -177,6 +178,7 @@ problem make_problem(LIterator lfirst, LIterator llast, IIterator ifirst, IItera
 
         ++lfirst;
         ++ifirst;
+        ++s;
     }
 
     return problem;
