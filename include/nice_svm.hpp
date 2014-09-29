@@ -151,6 +151,37 @@ void parallel_shuffle(IT1 first_1, IT1 last_1, IT2 first_2, IT2 last_2, RNG&& g)
     }
 }
 
+template<typename LIterator, typename IIterator>
+problem make_problem(LIterator lfirst, LIterator llast, IIterator ifirst, IIterator ilast){
+    assert(std::distance(lfirst, llast) == std::distance(ifirst, ilast));
+
+    auto n_samples = std::distance(lfirst, llast);
+
+    problem problem(n_samples, first->size());
+
+    while(lfirst != llast){
+
+    for(std::size_t s = 0; s < n_samples; ++s){
+        auto features = ifirst->size();
+
+        problem.label(s) = *lfirst;
+
+        for(std::size_t i = 0; i < features; ++i){
+            problem.sample(s)[i].index = i+1;
+            problem.sample(s)[i].value = (*ifirst)[i];
+        }
+
+        //End the vector
+        problem.sample(s)[features].index = -1;
+        problem.sample(s)[features].value = 0.0;
+
+        ++lfirst;
+        ++ifirst;
+    }
+
+    return problem;
+}
+
 template<typename Labels, typename Images>
 problem make_problem(const Labels& labels, const Images& samples){
     assert(labels.size() == samples.size());
