@@ -10,7 +10,8 @@
 
 #include <random>
 #include <utility>
-#include <cassert>
+
+#include "cpp_utils/algorithm.hpp"
 
 #include "svm.h"
 
@@ -130,27 +131,6 @@ struct model {
     }
 };
 
-template<typename IT1, typename IT2, typename RNG>
-void parallel_shuffle(IT1 first_1, IT1 last_1, IT2 first_2, IT2 last_2, RNG&& g){
-    assert(std::distance(first_1, last_1) == std::distance(first_2, last_2));
-    ((void)last_2); //Ensure no warning is issued for last_2 (used only in debug mode)
-
-    typedef typename std::iterator_traits<IT1>::difference_type diff_t;
-    typedef typename std::make_unsigned<diff_t>::type udiff_t;
-    typedef typename std::uniform_int_distribution<udiff_t> distr_t;
-    typedef typename distr_t::param_type param_t;
-
-    distr_t D;
-    diff_t n = last_1 - first_1;
-
-    for (diff_t i = n-1; i > 0; --i) {
-        using std::swap;
-        auto new_i = D(g, param_t(0, i));
-        swap(first_1[i], first_1[new_i]);
-        swap(first_2[i], first_2[new_i]);
-    }
-}
-
 template<typename LIterator, typename IIterator>
 problem make_problem(LIterator lfirst, LIterator llast, IIterator ifirst, IIterator ilast){
     assert(std::distance(lfirst, llast) == std::distance(ifirst, ilast));
@@ -218,7 +198,7 @@ problem make_problem(Labels& labels, Images& samples, std::size_t max = 0, bool 
         static std::random_device rd;
         static std::mt19937_64 g(rd());
 
-        parallel_shuffle(samples.begin(), samples.end(), labels.begin(), labels.end(), g);
+        cpp::parallel_shuffle(samples.begin(), samples.end(), labels.begin(), labels.end(), g);
     }
 
     if(max > 0 && max < labels.size()){
