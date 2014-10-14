@@ -393,13 +393,23 @@ inline void make_quiet(){
 
 inline void rbf_grid_search(svm::problem& problem, const svm_parameter& parameters, std::size_t n_fold, const std::vector<double>& c_values, const std::vector<double>& gamma_values){
     std::cout << "Grid Search" << std::endl;
+    std::cout << "C in [";
+    for(auto C : c_values){
+        std::cout << C << ",";
+    }
+    std::cout << "]" << std::endl;
+    std::cout << "y in [";
+    for(auto y : gamma_values){
+        std::cout << y << ",";
+    }
+    std::cout << "]" << std::endl;
 
     double max_accuracy = 0.0;
     std::size_t max_C = 0;
     std::size_t max_gamma = 0;
 
-    for(auto& C : c_values){
-        for(auto& gamma : gamma_values){
+    for(auto C : c_values){
+        for(auto gamma : gamma_values){
             svm_parameter new_parameter = parameters;
 
             new_parameter.C = C;
