@@ -133,8 +133,8 @@ struct model {
 
 template<typename LIterator, typename IIterator>
 problem make_problem(LIterator lfirst, LIterator llast, IIterator ifirst, IIterator ilast){
-    assert(std::distance(lfirst, llast) == std::distance(ifirst, ilast));
-    ((void)ilast); //Ensure no warning is issued for ilast (used only in debug mode)
+    cpp_assert(std::distance(lfirst, llast) == std::distance(ifirst, ilast), "Ranges must be of the same size");
+    cpp_unused(ilast); //Ensure no warning is issued for ilast (used only in debug mode)
 
     auto n_samples = std::distance(lfirst, llast);
 
@@ -166,7 +166,7 @@ problem make_problem(LIterator lfirst, LIterator llast, IIterator ifirst, IItera
 
 template<typename Labels, typename Images>
 problem make_problem(const Labels& labels, const Images& samples){
-    assert(labels.size() == samples.size());
+    cpp_assert(labels.size() == samples.size(), "There must be the same number of labels and images");
 
     auto n_samples = labels.size();
 
@@ -192,7 +192,7 @@ problem make_problem(const Labels& labels, const Images& samples){
 
 template<typename Labels, typename Images>
 problem make_problem(Labels& labels, Images& samples, std::size_t max = 0, bool shuffle = true){
-    assert(labels.size() == samples.size());
+    cpp_assert(labels.size() == samples.size(), "There must be the same number of labels and images");
 
     if(shuffle){
         static std::random_device rd;
