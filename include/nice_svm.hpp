@@ -286,8 +286,8 @@ inline double predict(model& model, const svm_node* sample){
     return svm_predict_probability(model.get_model(), sample, &prob_estimates[0]);
 }
 
-template<typename Sample>
-typename std::enable_if<std::is_same<typename Sample::value_type, double>::value, double>::type predict(model& model, const Sample& sample){
+template<typename Sample, cpp::enable_if_u<std::is_convertible<typename Sample::value_type, double>::value> = cpp::detail::dummy>
+double predict(model& model, const Sample& sample){
     std::vector<double> prob_estimates(model.classes());
 
     auto features = sample.size();
