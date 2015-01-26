@@ -10,6 +10,7 @@
 
 #include <random>
 #include <utility>
+#include <algorithm>
 
 #include "cpp_utils/algorithm.hpp"
 
