@@ -75,12 +75,12 @@ struct problem {
     }
 
     void scale(){
-        float a = 0.0;
-        float b = 1.0;
+        double a = 0.0;
+        double b = 1.0;
 
         for(std::size_t i = 0; i < n_features; ++i){
-            float min = 0.0;
-            float max = 0.0;
+            double min = 0.0;
+            double max = 0.0;
             for(std::size_t n = 0; n < n_samples; ++n){
                 min = std::min(min, sample(n)[i].value);
                 max = std::max(max, sample(n)[i].value);
