@@ -82,12 +82,12 @@ struct problem {
             float min = 0.0;
             float max = 0.0;
             for(std::size_t n = 0; n < n_samples; ++n){
-                min = std::min(min, sample(n)[i]);
-                max = std::max(max, sample(n)[i]);
+                min = std::min(min, sample(n)[i].value);
+                max = std::max(max, sample(n)[i].value);
             }
 
             for(std::size_t n = 0; n < n_samples; ++n){
-                sample(n)[i] = a + ((b - a) * (sample(n)[i] - min)) / (max - min);
+                sample(n)[i].value = a + ((b - a) * (sample(n)[i].value - min)) / (max - min);
             }
         }
     }
