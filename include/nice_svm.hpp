@@ -11,6 +11,7 @@
 #include <random>
 #include <utility>
 #include <algorithm>
+#include <limits>
 
 #include "cpp_utils/algorithm.hpp"
 
@@ -79,8 +80,8 @@ struct problem {
         double b = 1.0;
 
         for(std::size_t i = 0; i < n_features; ++i){
-            double min = 0.0;
-            double max = 0.0;
+            double min = std::numeric_limits<double>::max();
+            double max = std::numeric_limits<double>::lowest();
             for(std::size_t n = 0; n < n_samples; ++n){
                 min = std::min(min, sample(n)[i].value);
                 max = std::max(max, sample(n)[i].value);
