@@ -73,6 +73,24 @@ struct problem {
         }
     }
 
+    void scale(){
+        float a = 0.0;
+        float b = 1.0;
+
+        for(std::size_t i = 0; i < n_features; ++i){
+            float min = 0.0;
+            float max = 0.0;
+            for(std::size_t n = 0; n < n_samples; ++n){
+                min = std::min(min, sample(n)[i]);
+                max = std::max(max, sample(n)[i]);
+            }
+
+            for(std::size_t n = 0; n < n_samples; ++n){
+                sample(n)[i] = a + ((b - a) * (sample(n)[i] - min)) / (max - min);
+            }
+        }
+    }
+
     svm_problem& get_problem(){
         return sub;
     }
@@ -132,7 +150,7 @@ struct model {
 };
 
 template<typename LIterator, typename IIterator>
-problem make_problem(LIterator lfirst, LIterator llast, IIterator ifirst, IIterator ilast){
+problem make_problem(LIterator lfirst, LIterator llast, IIterator ifirst, IIterator ilast, bool scale = false){
     cpp_assert(std::distance(lfirst, llast) == std::distance(ifirst, ilast), "Ranges must be of the same size");
     cpp_unused(ilast); //Ensure no warning is issued for ilast (used only in debug mode)
 
@@ -161,11 +179,15 @@ problem make_problem(LIterator lfirst, LIterator llast, IIterator ifirst, IItera
         ++s;
     }
 
+    if(scale){
+        problem.scale();
+    }
+
     return problem;
 }
 
 template<typename Labels, typename Images>
-problem make_problem(const Labels& labels, const Images& samples){
+problem make_problem(const Labels& labels, const Images& samples, bool scale = false){
     cpp_assert(labels.size() == samples.size(), "There must be the same number of labels and images");
 
     auto n_samples = labels.size();
@@ -187,11 +209,15 @@ problem make_problem(const Labels& labels, const Images& samples){
         problem.sample(s)[features].value = 0.0;
     }
 
+    if(scale){
+        problem.scale();
+    }
+
     return problem;
 }
 
 template<typename Labels, typename Images>
-problem make_problem(Labels& labels, Images& samples, std::size_t max = 0, bool shuffle = true){
+problem make_problem(Labels& labels, Images& samples, std::size_t max = 0, bool shuffle = true, bool scale = false){
     cpp_assert(labels.size() == samples.size(), "There must be the same number of labels and images");
 
     if(shuffle){
@@ -223,6 +249,10 @@ problem make_problem(Labels& labels, Images& samples, std::size_t max = 0, bool 
         //End the vector
         problem.sample(s)[features].index = -1;
         problem.sample(s)[features].value = 0.0;
+    }
+
+    if(scale){
+        problem.scale();
     }
 
     return problem;
