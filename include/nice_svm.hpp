@@ -448,64 +448,53 @@ enum class grid_search_type {
 };
 
 struct rbf_grid {
-    grid_search_type type = grid_search_type::EXP;
-
     double c_first = 2e-5;
     double c_last = 2e15;
-    double c_steps = 10;
+    std::size_t c_steps = 10;
+    auto c_search = grid_search_type::EXP;
 
     double gamma_first = 2e-15;
     double gamma_last = 2e3;
-    double gamma_steps = 10;
+    std::size_t gamma_steps = 10;
+    auto gamma_search = grid_search_type::EXP;
 };
 
-inline void rbf_grid_search_exp(svm::problem& problem, const svm_parameter& parameters, std::size_t n_fold, const rbf_grid& g = rbf_grid()){
-    std::vector<double> c_values(g.c_steps);
-    std::vector<double> gamma_values(g.gamma_steps);
+inline std::vector<double> generate_values(std::size_t steps, double first, double last, grid_search_type type){
+    std::vector<double> values(steps);
 
-    double c_first = g.c_first;
-    double gamma_first = g.gamma_first;
+    if(steps == 1){
+        values[0] = first;
+    } else {
+        switch(g.type){
+            case grid_search_type::LINEAR:
+                for(std::size_t i = 0; i < steps; ++i){
+                    values[i] = first;
+                    first += (last - first) / (steps - 1);
+                }
 
-    for(std::size_t i = 0; i < g.c_steps; ++i){
-        c_values[i] = c_first;
-        c_first *= std::pow(g.c_last / g.c_first, 1.0 / (g.c_steps - 1.0));
+                break;
+
+            case grid_search_type::EXP:
+                for(std::size_t i = 0; i < steps; ++i){
+                    values[i] = first;
+                    first *= std::pow(last / first, 1.0 / (steps - 1));
+                }
+
+                break;
+        }
     }
 
-    for(std::size_t i = 0; i < g.gamma_steps; ++i){
-        gamma_values[i] = gamma_first;
-        gamma_first *= std::pow(g.gamma_last / g.gamma_first, 1.0 / (g.gamma_steps - 1.0));
-    }
-
-    rbf_grid_search(problem, parameters, n_fold, c_values, gamma_values);
-}
-
-inline void rbf_grid_search_lin(svm::problem& problem, const svm_parameter& parameters, std::size_t n_fold, const rbf_grid& g = rbf_grid()){
-    std::vector<double> c_values(g.c_steps);
-    std::vector<double> gamma_values(g.gamma_steps);
-
-    double c_first = g.c_first;
-    double gamma_first = g.gamma_first;
-
-    for(std::size_t i = 0; i < g.c_steps; ++i){
-        c_values[i] = c_first;
-        c_first += (g.c_last - g.c_first) / (g.c_steps - 1.0);
-    }
-
-    for(std::size_t i = 0; i < g.gamma_steps; ++i){
-        gamma_values[i] = gamma_first;
-        gamma_first += (g.gamma_last - g.gamma_first) / (g.gamma_steps - 1.0);
-    }
-
-    rbf_grid_search(problem, parameters, n_fold, c_values, gamma_values);
+    return values;
 }
 
 inline void rbf_grid_search(svm::problem& problem, const svm_parameter& parameters, std::size_t n_fold, const rbf_grid& g = rbf_grid()){
-    switch(g.type){
-        case grid_search_type::LINEAR:
-            rbf_grid_search_lin(problem, parameters, n_fold, g);
-        case grid_search_type::EXP:
-            rbf_grid_search_exp(problem, parameters, n_fold, g);
-    }
+    std::vector<double> c_values (g.c_steps);
+    std::vector<double> gamma_values(g.gamma_steps);
+
+    auto c_values = generate_values(g.c_steps, g.c_first, g.c_last, g.c_search);
+    auto gamma_values = generate_values(g.gamma_steps, g.gamma_first, g.gamma_last, g.gamma_search);
+
+    rbf_grid_search(problem, parameters, n_fold, c_values, gamma_values);
 }
 
 } //end of namespace svm
