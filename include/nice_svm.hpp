@@ -451,12 +451,12 @@ struct rbf_grid {
     double c_first = 2e-5;
     double c_last = 2e15;
     std::size_t c_steps = 10;
-    auto c_search = grid_search_type::EXP;
+    grid_search_type c_search = grid_search_type::EXP;
 
     double gamma_first = 2e-15;
     double gamma_last = 2e3;
     std::size_t gamma_steps = 10;
-    auto gamma_search = grid_search_type::EXP;
+    grid_search_type gamma_search = grid_search_type::EXP;
 };
 
 inline std::vector<double> generate_values(std::size_t steps, double first, double last, grid_search_type type){
@@ -465,7 +465,7 @@ inline std::vector<double> generate_values(std::size_t steps, double first, doub
     if(steps == 1){
         values[0] = first;
     } else {
-        switch(g.type){
+        switch(type){
             case grid_search_type::LINEAR:
                 for(std::size_t i = 0; i < steps; ++i){
                     values[i] = first;
@@ -488,9 +488,6 @@ inline std::vector<double> generate_values(std::size_t steps, double first, doub
 }
 
 inline void rbf_grid_search(svm::problem& problem, const svm_parameter& parameters, std::size_t n_fold, const rbf_grid& g = rbf_grid()){
-    std::vector<double> c_values (g.c_steps);
-    std::vector<double> gamma_values(g.gamma_steps);
-
     auto c_values = generate_values(g.c_steps, g.c_first, g.c_last, g.c_search);
     auto gamma_values = generate_values(g.gamma_steps, g.gamma_first, g.gamma_last, g.gamma_search);
 
