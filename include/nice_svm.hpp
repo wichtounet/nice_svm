@@ -467,19 +467,23 @@ inline std::vector<double> generate_values(std::size_t steps, double first, doub
     } else {
         switch(type){
             case grid_search_type::LINEAR:
-                auto current = first;
-                for(std::size_t i = 0; i < steps; ++i){
-                    values[i] = current;
-                    current += (last - first) / (steps - 1);
+                {
+                    auto current = first;
+                    for(std::size_t i = 0; i < steps; ++i){
+                        values[i] = current;
+                        current += (last - first) / (steps - 1);
+                    }
                 }
 
                 break;
 
             case grid_search_type::EXP:
-                auto current = first;
-                for(std::size_t i = 0; i < steps; ++i){
-                    values[i] = current;
-                    current *= std::pow(last / first, 1.0 / (steps - 1));
+                {
+                    auto current = first;
+                    for(std::size_t i = 0; i < steps; ++i){
+                        values[i] = current;
+                        current *= std::pow(last / first, 1.0 / (steps - 1));
+                    }
                 }
 
                 break;
