@@ -23,10 +23,13 @@ namespace svm {
  * \brief Describe a problem for SVM
  */
 struct problem {
-    std::size_t n_samples; ///< The number of samples
+    std::size_t n_samples;  ///< The number of samples
     std::size_t n_features; ///< THe number of features per sample
-    svm_problem sub; ///< The real libsvm problem
+    svm_problem sub;        ///< The real libsvm problem
 
+    /*!
+     * \brief Create a new empty problem
+     */
     problem() : n_samples(0), n_features(0), sub({0, nullptr, nullptr}) {
         //Nothing to init
     }
