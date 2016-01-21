@@ -189,36 +189,6 @@ problem make_problem(LIterator lfirst, LIterator llast, IIterator ifirst, IItera
 }
 
 template<typename Labels, typename Images>
-problem make_problem(const Labels& labels, const Images& samples, bool scale = false){
-    cpp_assert(labels.size() == samples.size(), "There must be the same number of labels and images");
-
-    auto n_samples = labels.size();
-
-    problem problem(n_samples, samples.front().size());
-
-    for(std::size_t s = 0; s < n_samples; ++s){
-        auto features = samples[s].size();
-
-        problem.label(s) = labels[s];
-
-        for(std::size_t i = 0; i < features; ++i){
-            problem.sample(s)[i].index = i+1;
-            problem.sample(s)[i].value = samples[s][i];
-        }
-
-        //End the vector
-        problem.sample(s)[features].index = -1;
-        problem.sample(s)[features].value = 0.0;
-    }
-
-    if(scale){
-        problem.scale();
-    }
-
-    return problem;
-}
-
-template<typename Labels, typename Images>
 problem make_problem(Labels& labels, Images& samples, std::size_t max = 0, bool shuffle = true, bool scale = false){
     cpp_assert(labels.size() == samples.size(), "There must be the same number of labels and images");
 
@@ -258,6 +228,11 @@ problem make_problem(Labels& labels, Images& samples, std::size_t max = 0, bool 
     }
 
     return problem;
+}
+
+template<typename Labels, typename Images>
+problem make_problem(const Labels& labels, const Images& samples, bool scale = false){
+    return make_problem(labels, samples, 0, false, scale);
 }
 
 inline svm_parameter default_parameters(){
