@@ -30,36 +30,37 @@ struct problem {
     /*!
      * \brief Create a new empty problem
      */
-    problem() : n_samples(0), n_features(0), sub({0, nullptr, nullptr}) {
+    problem()
+            : n_samples(0), n_features(0), sub({0, nullptr, nullptr}) {
         //Nothing to init
     }
 
-    problem(std::size_t n_samples, std::size_t n_features) :
-            n_samples(n_samples),
-            n_features(n_features),
-            sub({static_cast<int>(n_samples), new double[n_samples], new svm_node*[n_samples]}){
+    problem(std::size_t n_samples, std::size_t n_features)
+            : n_samples(n_samples),
+              n_features(n_features),
+              sub({static_cast<int>(n_samples), new double[n_samples], new svm_node*[n_samples]}) {
         //Init the sub vectors
-        for(std::size_t s = 0; s < n_samples; ++s){
-            sub.x[s] = new svm_node[n_features+1];
+        for (std::size_t s = 0; s < n_samples; ++s) {
+            sub.x[s] = new svm_node[n_features + 1];
         }
     }
 
     problem(problem& rhs) = delete;
 
-    problem(problem&& rhs) :
-            n_samples(rhs.n_samples),
-            n_features(rhs.n_features),
-            sub({rhs.sub.l, rhs.sub.y, rhs.sub.x}){
+    problem(problem&& rhs)
+            : n_samples(rhs.n_samples),
+              n_features(rhs.n_features),
+              sub({rhs.sub.l, rhs.sub.y, rhs.sub.x}) {
         rhs.sub.x = nullptr;
         rhs.sub.y = nullptr;
     }
 
-    problem& operator=(problem&& rhs){
-        n_samples = rhs.n_samples;
-        n_features = rhs.n_features;
-        sub.l = rhs.sub.l;
-        sub.x = rhs.sub.x;
-        sub.y = rhs.sub.y;
+    problem& operator=(problem&& rhs) {
+        n_samples    = rhs.n_samples;
+        n_features   = rhs.n_features;
+        sub.l        = rhs.sub.l;
+        sub.x        = rhs.sub.x;
+        sub.y        = rhs.sub.y;
 
         rhs.sub.x = nullptr;
         rhs.sub.y = nullptr;
@@ -67,39 +68,39 @@ struct problem {
         return *this;
     }
 
-    ~problem(){
-        if(sub.x){
-            for(std::size_t s = 0; s < n_samples; ++s){
+    ~problem() {
+        if (sub.x) {
+            for (std::size_t s = 0; s < n_samples; ++s) {
                 delete[] sub.x[s];
             }
 
             delete[] sub.x;
         }
 
-        if(sub.y){
+        if (sub.y) {
             delete[] sub.y;
         }
     }
 
-    void scale(){
+    void scale() {
         double a = 0.0;
         double b = 1.0;
 
-        for(std::size_t i = 0; i < n_features; ++i){
+        for (std::size_t i = 0; i < n_features; ++i) {
             double min = std::numeric_limits<double>::max();
             double max = std::numeric_limits<double>::lowest();
-            for(std::size_t n = 0; n < n_samples; ++n){
+            for (std::size_t n = 0; n < n_samples; ++n) {
                 min = std::min(min, sample(n)[i].value);
                 max = std::max(max, sample(n)[i].value);
             }
 
-            for(std::size_t n = 0; n < n_samples; ++n){
+            for (std::size_t n = 0; n < n_samples; ++n) {
                 sample(n)[i].value = a + ((b - a) * (sample(n)[i].value - min)) / (max - min);
             }
         }
     }
 
-    svm_problem& get_problem(){
+    svm_problem& get_problem() {
         return sub;
     }
 
@@ -107,11 +108,11 @@ struct problem {
         return sub;
     }
 
-    double& label(std::size_t i){
+    double& label(std::size_t i) {
         return sub.y[i];
     }
 
-    svm_node* sample(std::size_t i){
+    svm_node* sample(std::size_t i) {
         return sub.x[i];
     }
 };
@@ -121,30 +122,32 @@ struct model {
 
     model() = default;
 
-    model(svm_model* sub) : sub(sub) {}
+    model(svm_model* sub)
+            : sub(sub) {}
 
-    model(model&& rhs) : sub(rhs.sub){
+    model(model&& rhs)
+            : sub(rhs.sub) {
         rhs.sub = nullptr;
     }
 
-    model& operator=(model&& rhs){
-        sub = rhs.sub;
-        rhs.sub = nullptr;
+    model& operator=(model&& rhs) {
+        sub        = rhs.sub;
+        rhs.sub    = nullptr;
 
         return *this;
     }
 
-    ~model(){
-        if(sub){
+    ~model() {
+        if (sub) {
             svm_free_and_destroy_model(&sub);
         }
     }
 
-    svm_model* get_model(){
+    svm_model* get_model() {
         return sub;
     }
 
-    std::size_t classes(){
+    std::size_t classes() {
         return svm_get_nr_class(sub);
     }
 
@@ -152,13 +155,13 @@ struct model {
         return sub;
     }
 
-    operator bool(){
+    operator bool() {
         return sub;
     }
 };
 
-template<typename LIterator, typename IIterator>
-problem make_problem(LIterator lfirst, LIterator llast, IIterator ifirst, IIterator ilast, bool scale = false){
+template <typename LIterator, typename IIterator>
+problem make_problem(LIterator lfirst, LIterator llast, IIterator ifirst, IIterator ilast, bool scale = false) {
     cpp_assert(std::distance(lfirst, llast) == std::distance(ifirst, ilast), "Ranges must be of the same size");
     cpp_unused(ilast); //Ensure no warning is issued for ilast (used only in debug mode)
 
@@ -168,13 +171,13 @@ problem make_problem(LIterator lfirst, LIterator llast, IIterator ifirst, IItera
 
     std::size_t s = 0;
 
-    while(lfirst != llast){
+    while (lfirst != llast) {
         problem.label(s) = *lfirst;
 
         auto features = ifirst->size();
 
-        for(std::size_t i = 0; i < features; ++i){
-            problem.sample(s)[i].index = i+1;
+        for (std::size_t i = 0; i < features; ++i) {
+            problem.sample(s)[i].index = i + 1;
             problem.sample(s)[i].value = (*ifirst)[i];
         }
 
@@ -187,25 +190,25 @@ problem make_problem(LIterator lfirst, LIterator llast, IIterator ifirst, IItera
         ++s;
     }
 
-    if(scale){
+    if (scale) {
         problem.scale();
     }
 
     return problem;
 }
 
-template<typename Labels, typename Images>
-problem make_problem(Labels& labels, Images& samples, std::size_t max = 0, bool shuffle = true, bool scale = false){
+template <typename Labels, typename Images>
+problem make_problem(Labels& labels, Images& samples, std::size_t max = 0, bool shuffle = true, bool scale = false) {
     cpp_assert(labels.size() == samples.size(), "There must be the same number of labels and images");
 
-    if(shuffle){
+    if (shuffle) {
         static std::random_device rd;
         static std::mt19937_64 g(rd());
 
         cpp::parallel_shuffle(samples.begin(), samples.end(), labels.begin(), labels.end(), g);
     }
 
-    if(max > 0 && max < labels.size()){
+    if (max > 0 && max < labels.size()) {
         labels.resize(max);
         samples.resize(max);
     }
@@ -214,13 +217,13 @@ problem make_problem(Labels& labels, Images& samples, std::size_t max = 0, bool 
 
     problem problem(n_samples, samples.front().size());
 
-    for(std::size_t s = 0; s < n_samples; ++s){
+    for (std::size_t s = 0; s < n_samples; ++s) {
         auto features = samples[s].size();
 
         problem.label(s) = labels[s];
 
-        for(std::size_t i = 0; i < features; ++i){
-            problem.sample(s)[i].index = i+1;
+        for (std::size_t i = 0; i < features; ++i) {
+            problem.sample(s)[i].index = i + 1;
             problem.sample(s)[i].value = samples[s][i];
         }
 
@@ -229,55 +232,55 @@ problem make_problem(Labels& labels, Images& samples, std::size_t max = 0, bool 
         problem.sample(s)[features].value = 0.0;
     }
 
-    if(scale){
+    if (scale) {
         problem.scale();
     }
 
     return problem;
 }
 
-template<typename Labels, typename Images>
-problem make_problem(const Labels& labels, const Images& samples, bool scale = false){
+template <typename Labels, typename Images>
+problem make_problem(const Labels& labels, const Images& samples, bool scale = false) {
     return make_problem(labels, samples, 0, false, scale);
 }
 
-inline svm_parameter default_parameters(){
+inline svm_parameter default_parameters() {
     svm_parameter parameters;
 
-    parameters.svm_type = C_SVC;
-    parameters.kernel_type = RBF;
-    parameters.degree = 3;
-    parameters.gamma = 0;
-    parameters.coef0 = 0;
-    parameters.nu = 0.5;
-    parameters.cache_size = 100;
-    parameters.C = 1;
-    parameters.eps = 1e-3;
-    parameters.p = 0.1;
-    parameters.shrinking = 1;
-    parameters.probability = 0;
-    parameters.nr_weight = 0;
+    parameters.svm_type     = C_SVC;
+    parameters.kernel_type  = RBF;
+    parameters.degree       = 3;
+    parameters.gamma        = 0;
+    parameters.coef0        = 0;
+    parameters.nu           = 0.5;
+    parameters.cache_size   = 100;
+    parameters.C            = 1;
+    parameters.eps          = 1e-3;
+    parameters.p            = 0.1;
+    parameters.shrinking    = 1;
+    parameters.probability  = 0;
+    parameters.nr_weight    = 0;
     parameters.weight_label = nullptr;
-    parameters.weight = nullptr;
+    parameters.weight       = nullptr;
 
     return parameters;
 }
 
-inline double predict(model& model, const svm_node* sample){
+inline double predict(model& model, const svm_node* sample) {
     std::vector<double> prob_estimates(model.classes());
 
     return svm_predict_probability(model.get_model(), sample, &prob_estimates[0]);
 }
 
-template<typename Sample, cpp::enable_if_u<std::is_convertible<typename Sample::value_type, double>::value> = cpp::detail::dummy>
-double predict(model& model, const Sample& sample){
+template <typename Sample, cpp::enable_if_u<std::is_convertible<typename Sample::value_type, double>::value> = cpp::detail::dummy>
+double predict(model& model, const Sample& sample) {
     std::vector<double> prob_estimates(model.classes());
 
     auto features = sample.size();
-    std::vector<svm_node> svm_sample(features+1);
+    std::vector<svm_node> svm_sample(features + 1);
 
-    for(std::size_t i = 0; i < features; ++i){
-        svm_sample[i].index = i+1;
+    for (std::size_t i = 0; i < features; ++i) {
+        svm_sample[i].index = i + 1;
         svm_sample[i].value = sample[i];
     }
 
@@ -288,15 +291,15 @@ double predict(model& model, const Sample& sample){
     return svm_predict_probability(model.get_model(), &svm_sample[0], &prob_estimates[0]);
 }
 
-inline void test_model(problem& problem, model& model){
+inline void test_model(problem& problem, model& model) {
     std::vector<double> prob_estimates(model.classes());
 
     std::size_t correct = 0;
 
-    for(std::size_t s = 0; s < problem.n_samples; ++s){
+    for (std::size_t s = 0; s < problem.n_samples; ++s) {
         auto label = svm_predict_probability(model.get_model(), problem.sample(s), &prob_estimates[0]);
 
-        if(label == problem.label(s)){
+        if (label == problem.label(s)) {
             ++correct;
         }
     }
@@ -307,7 +310,7 @@ inline void test_model(problem& problem, model& model){
     std::cout << "Error: " << (100.0 - (100.0 * correct / problem.n_samples)) << "%" << std::endl;
 }
 
-inline svm_model* train(problem& problem, const svm_parameter& parameters){
+inline svm_model* train(problem& problem, const svm_parameter& parameters) {
     std::cout << "Train SVM: " << problem.n_samples << " samples" << std::endl;
 
     auto model = svm_train(&problem.get_problem(), &parameters);
@@ -317,24 +320,24 @@ inline svm_model* train(problem& problem, const svm_parameter& parameters){
     return model;
 }
 
-inline double cross_validate(problem& problem, const svm_parameter& parameters, std::size_t n_fold, bool quiet = false){
-    if(!quiet){
+inline double cross_validate(problem& problem, const svm_parameter& parameters, std::size_t n_fold, bool quiet = false) {
+    if (!quiet) {
         std::cout << "Cross validation" << std::endl;
     }
 
-    double *target = new double[problem.n_samples];
+    double* target = new double[problem.n_samples];
 
     svm_cross_validation(&problem.get_problem(), &parameters, n_fold, target);
 
     std::size_t cross_correct = 0;
 
-    for(std::size_t i = 0; i < problem.n_samples; ++i){
-        if(target[i] == problem.label(i)){
+    for (std::size_t i = 0; i < problem.n_samples; ++i) {
+        if (target[i] == problem.label(i)) {
             ++cross_correct;
         }
     }
 
-    if(!quiet){
+    if (!quiet) {
         std::cout << "Cross validation Samples: " << problem.n_samples << std::endl;
         std::cout << "Cross validation Correct: " << cross_correct << std::endl;
         std::cout << "Cross validation Accuracy: " << (100.0 * cross_correct / problem.n_samples) << "%" << std::endl;
@@ -348,10 +351,10 @@ inline double cross_validate(problem& problem, const svm_parameter& parameters, 
     return 100.0 * cross_correct / problem.n_samples;
 }
 
-inline bool check(const problem& problem, const svm_parameter& parameters){
+inline bool check(const problem& problem, const svm_parameter& parameters) {
     auto error = svm_check_parameter(&problem.get_problem(), &parameters);
 
-    if(error){
+    if (error) {
         std::cerr << "Parameters not checked: " << error << std::endl;
 
         return false;
@@ -360,12 +363,12 @@ inline bool check(const problem& problem, const svm_parameter& parameters){
     return true;
 }
 
-inline model load(const std::string& file_name){
+inline model load(const std::string& file_name) {
     std::cout << "Load SVM model" << std::endl;
 
     auto model = svm_load_model(file_name.c_str());
 
-    if(!model){
+    if (!model) {
         std::cout << "Impossible to load model" << std::endl;
     } else {
         std::cout << "SVM model loaded" << std::endl;
@@ -374,48 +377,48 @@ inline model load(const std::string& file_name){
     return {model};
 }
 
-inline bool save(const model& model, const std::string& file_name){
+inline bool save(const model& model, const std::string& file_name) {
     return !svm_save_model(file_name.c_str(), model.get_model());
 }
 
 inline void print_null(const char* /*s*/) {}
 
-inline void make_quiet(){
+inline void make_quiet() {
     svm_set_print_string_function(&print_null);
 }
 
-inline void rbf_grid_search(svm::problem& problem, const svm_parameter& parameters, std::size_t n_fold, const std::vector<double>& c_values, const std::vector<double>& gamma_values){
+inline void rbf_grid_search(svm::problem& problem, const svm_parameter& parameters, std::size_t n_fold, const std::vector<double>& c_values, const std::vector<double>& gamma_values) {
     std::cout << "Grid Search" << std::endl;
     std::cout << "C in [";
-    for(auto C : c_values){
+    for (auto C : c_values) {
         std::cout << C << ",";
     }
     std::cout << "]" << std::endl;
     std::cout << "y in [";
-    for(auto y : gamma_values){
+    for (auto y : gamma_values) {
         std::cout << y << ",";
     }
     std::cout << "]" << std::endl;
 
-    double max_accuracy = 0.0;
-    std::size_t max_C = 0;
+    double max_accuracy   = 0.0;
+    std::size_t max_C     = 0;
     std::size_t max_gamma = 0;
 
-    for(auto C : c_values){
-        for(auto gamma : gamma_values){
+    for (auto C : c_values) {
+        for (auto gamma : gamma_values) {
             svm_parameter new_parameter = parameters;
 
-            new_parameter.C = C;
+            new_parameter.C     = C;
             new_parameter.gamma = gamma;
 
             auto accuracy = svm::cross_validate(problem, new_parameter, n_fold, true);
 
             std::cout << "C=" << C << ",y=" << gamma << " -> " << accuracy << std::endl;
 
-            if(accuracy > max_accuracy){
+            if (accuracy > max_accuracy) {
                 max_accuracy = accuracy;
-                max_C = C;
-                max_gamma = gamma;
+                max_C        = C;
+                max_gamma    = gamma;
             }
         }
     }
@@ -429,53 +432,51 @@ enum class grid_search_type {
 };
 
 struct rbf_grid {
-    double c_first = 2e-5;
-    double c_last = 2e15;
-    std::size_t c_steps = 10;
+    double c_first            = 2e-5;
+    double c_last             = 2e15;
+    std::size_t c_steps       = 10;
     grid_search_type c_search = grid_search_type::EXP;
 
-    double gamma_first = 2e-15;
-    double gamma_last = 2e3;
-    std::size_t gamma_steps = 10;
+    double gamma_first            = 2e-15;
+    double gamma_last             = 2e3;
+    std::size_t gamma_steps       = 10;
     grid_search_type gamma_search = grid_search_type::EXP;
 };
 
-inline std::vector<double> generate_values(std::size_t steps, double first, double last, grid_search_type type){
+inline std::vector<double> generate_values(std::size_t steps, double first, double last, grid_search_type type) {
     std::vector<double> values(steps);
 
-    if(steps == 1){
+    if (steps == 1) {
         values[0] = first;
     } else {
-        switch(type){
-            case grid_search_type::LINEAR:
-                {
-                    auto current = first;
-                    for(std::size_t i = 0; i < steps; ++i){
-                        values[i] = current;
-                        current += (last - first) / (steps - 1);
-                    }
+        switch (type) {
+            case grid_search_type::LINEAR: {
+                auto current = first;
+                for (std::size_t i = 0; i < steps; ++i) {
+                    values[i] = current;
+                    current += (last - first) / (steps - 1);
                 }
+            }
 
-                break;
+            break;
 
-            case grid_search_type::EXP:
-                {
-                    auto current = first;
-                    for(std::size_t i = 0; i < steps; ++i){
-                        values[i] = current;
-                        current *= std::pow(last / first, 1.0 / (steps - 1));
-                    }
+            case grid_search_type::EXP: {
+                auto current = first;
+                for (std::size_t i = 0; i < steps; ++i) {
+                    values[i] = current;
+                    current *= std::pow(last / first, 1.0 / (steps - 1));
                 }
+            }
 
-                break;
+            break;
         }
     }
 
     return values;
 }
 
-inline void rbf_grid_search(svm::problem& problem, const svm_parameter& parameters, std::size_t n_fold, const rbf_grid& g = rbf_grid()){
-    auto c_values = generate_values(g.c_steps, g.c_first, g.c_last, g.c_search);
+inline void rbf_grid_search(svm::problem& problem, const svm_parameter& parameters, std::size_t n_fold, const rbf_grid& g = rbf_grid()) {
+    auto c_values     = generate_values(g.c_steps, g.c_first, g.c_last, g.c_search);
     auto gamma_values = generate_values(g.gamma_steps, g.gamma_first, g.gamma_last, g.gamma_search);
 
     rbf_grid_search(problem, parameters, n_fold, c_values, gamma_values);
