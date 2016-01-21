@@ -117,9 +117,15 @@ struct problem {
     }
 };
 
+/*!
+ * \brief Represent a trained model of SVM
+ */
 struct model {
     svm_model* sub = nullptr;
 
+    /*!
+     * \brief Construct a default model
+     */
     model() = default;
 
     model(svm_model* sub)
@@ -137,29 +143,56 @@ struct model {
         return *this;
     }
 
+    /*!
+     * \brief Destroys the model
+     */
     ~model() {
         if (sub) {
             svm_free_and_destroy_model(&sub);
         }
     }
 
-    svm_model* get_model() {
-        return sub;
-    }
-
+    /*!
+     * \brief Returns the number of classes of hte model
+     * \return the number of classes of the model
+     */
     std::size_t classes() {
         return svm_get_nr_class(sub);
     }
 
+    /*!
+     * \brief Returns a pointer to the libsvm model
+     * \return a pointer to the libsvm model
+     */
+    svm_model* get_model() {
+        return sub;
+    }
+
+    /*!
+     * \brief Returns a pointer to the libsvm model
+     * \return a pointer to the libsvm model
+     */
     const svm_model* get_model() const {
         return sub;
     }
 
+    /*!
+     * \brief Indicates if the model is valid or not
+     */
     operator bool() {
         return sub;
     }
 };
 
+/*!
+ * \brief Create a problem
+ * \param lfirst The beginning of the labels
+ * \param llast The end of the labels
+ * \param ifirst The beginning of the samples
+ * \param ilast The end of the samples
+ * \param scale true if the problem features must be scaled
+ * \return the created problem
+ */
 template <typename LIterator, typename IIterator>
 problem make_problem(LIterator lfirst, LIterator llast, IIterator ifirst, IIterator ilast, bool scale = false) {
     cpp_assert(std::distance(lfirst, llast) == std::distance(ifirst, ilast), "Ranges must be of the same size");
@@ -176,8 +209,7 @@ problem make_problem(LIterator lfirst, LIterator llast, IIterator ifirst, IItera
 
         auto features = ifirst->size();
 
-        for (std::size_t i = 0; i < features; ++i) {
-            problem.sample(s)[i].index = i + 1;
+        for (std::size_t i = 0; i < features; ++i) { problem.sample(s)[i].index = i + 1;
             problem.sample(s)[i].value = (*ifirst)[i];
         }
 
@@ -197,6 +229,15 @@ problem make_problem(LIterator lfirst, LIterator llast, IIterator ifirst, IItera
     return problem;
 }
 
+/*!
+ * \brief Create a problem
+ * \param labels The labels
+ * \param samples The samples
+ * \param max The maximum number of samples and labels to use
+ * \param shuffle true if the data needs to be shuffled
+ * \param scale true if the problem features must be scaled
+ * \return the created problem
+ */
 template <typename Labels, typename Images>
 problem make_problem(Labels& labels, Images& samples, std::size_t max = 0, bool shuffle = true, bool scale = false) {
     cpp_assert(labels.size() == samples.size(), "There must be the same number of labels and images");
@@ -239,11 +280,22 @@ problem make_problem(Labels& labels, Images& samples, std::size_t max = 0, bool 
     return problem;
 }
 
+/*!
+ * \brief Create a problem
+ * \param labels The labels
+ * \param samples The samples
+ * \param scale true if the problem features must be scaled
+ * \return the created problem
+ */
 template <typename Labels, typename Images>
 problem make_problem(const Labels& labels, const Images& samples, bool scale = false) {
     return make_problem(labels, samples, 0, false, scale);
 }
 
+/*!
+ * \brief Generate a default set of parameters
+ * \return the set of parameters
+ */
 inline svm_parameter default_parameters() {
     svm_parameter parameters;
 
@@ -291,6 +343,11 @@ double predict(model& model, const Sample& sample) {
     return svm_predict_probability(model.get_model(), &svm_sample[0], &prob_estimates[0]);
 }
 
+/*!
+ * \brief Test a model on the given problem
+ * \param problem The problem description
+ * \param model The model to test
+ */
 inline void test_model(problem& problem, model& model) {
     std::vector<double> prob_estimates(model.classes());
 
@@ -310,6 +367,12 @@ inline void test_model(problem& problem, model& model) {
     std::cout << "Error: " << (100.0 - (100.0 * correct / problem.n_samples)) << "%" << std::endl;
 }
 
+/*!
+ * \brief Train a model for the given problem and parameter set
+ * \param problem The problem description
+ * \param parameters The training parameters
+ * \return The trained model
+ */
 inline svm_model* train(problem& problem, const svm_parameter& parameters) {
     std::cout << "Train SVM: " << problem.n_samples << " samples" << std::endl;
 
@@ -351,6 +414,12 @@ inline double cross_validate(problem& problem, const svm_parameter& parameters, 
     return 100.0 * cross_correct / problem.n_samples;
 }
 
+/*!
+ * \brief Check the validity of the problem and parameters
+ * \param problem The problem to check
+ * \param parameters The parameters to test
+ * \return true if it is correct, false otherwise
+ */
 inline bool check(const problem& problem, const svm_parameter& parameters) {
     auto error = svm_check_parameter(&problem.get_problem(), &parameters);
 
@@ -363,6 +432,11 @@ inline bool check(const problem& problem, const svm_parameter& parameters) {
     return true;
 }
 
+/*!
+ * \brief Load a model from file
+ * \param file_name The fiel to load the model from
+ * \return The loaded model
+ */
 inline model load(const std::string& file_name) {
     std::cout << "Load SVM model" << std::endl;
 
@@ -377,12 +451,21 @@ inline model load(const std::string& file_name) {
     return {model};
 }
 
+/*!
+ * \brief Save the given model into the given file
+ * \param model The model to save
+ * \param file_name The path to the target file
+ * \return true if it was saved correctly, false otherwise
+ */
 inline bool save(const model& model, const std::string& file_name) {
     return !svm_save_model(file_name.c_str(), model.get_model());
 }
 
 inline void print_null(const char* /*s*/) {}
 
+/*!
+ * \brief Make libsvm quiet during training
+ */
 inline void make_quiet() {
     svm_set_print_string_function(&print_null);
 }
@@ -426,23 +509,37 @@ inline void rbf_grid_search(svm::problem& problem, const svm_parameter& paramete
     std::cout << "Best: C=" << max_C << ",y=" << max_gamma << " -> " << max_accuracy << std::endl;
 }
 
+/*!
+ * \brief Enumeration for the type of grid search to do
+ */
 enum class grid_search_type {
-    LINEAR,
-    EXP
+    LINEAR, ///< Linear search
+    EXP     ///< Exponetial seach
 };
 
+/*!
+ * \brief Descriptor for the grid of parameters to be searched for an RBF kernel
+ */
 struct rbf_grid {
-    double c_first            = 2e-5;
-    double c_last             = 2e15;
-    std::size_t c_steps       = 10;
-    grid_search_type c_search = grid_search_type::EXP;
+    double c_first            = 2e-5;                  ///< The first c to test
+    double c_last             = 2e15;                  ///< The last c to test
+    std::size_t c_steps       = 10;                    ///< The number of steps for c
+    grid_search_type c_search = grid_search_type::EXP; ///< The type of search for c
 
-    double gamma_first            = 2e-15;
-    double gamma_last             = 2e3;
-    std::size_t gamma_steps       = 10;
-    grid_search_type gamma_search = grid_search_type::EXP;
+    double gamma_first            = 2e-15;                 ///< The first gamma to test
+    double gamma_last             = 2e3;                   ///< The last gamma to test
+    std::size_t gamma_steps       = 10;                    ///< The number of steps for gamma
+    grid_search_type gamma_search = grid_search_type::EXP; ///< The type of search for gamma
 };
 
+/*!
+ * \brief Generate alues for a grid search
+ * \param steps The number of steps
+ * \param first The first value
+ * \param last The last value
+ * \param type The type of search
+ * \return a vector ontainining all the values of the search
+ */
 inline std::vector<double> generate_values(std::size_t steps, double first, double last, grid_search_type type) {
     std::vector<double> values(steps);
 
