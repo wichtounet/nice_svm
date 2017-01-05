@@ -348,7 +348,7 @@ double predict(model& model, const Sample& sample) {
  * \param problem The problem description
  * \param model The model to test
  */
-inline void test_model(problem& problem, model& model) {
+inline double test_model(problem& problem, model& model) {
     std::vector<double> prob_estimates(model.classes());
 
     std::size_t correct = 0;
@@ -361,10 +361,14 @@ inline void test_model(problem& problem, model& model) {
         }
     }
 
+    double accuracy = 100.0 * correct / problem.n_samples;
+
     std::cout << "Samples: " << problem.n_samples << std::endl;
     std::cout << "Correct: " << correct << std::endl;
-    std::cout << "Accuracy: " << (100.0 * correct / problem.n_samples) << "%" << std::endl;
-    std::cout << "Error: " << (100.0 - (100.0 * correct / problem.n_samples)) << "%" << std::endl;
+    std::cout << "Accuracy: " << accuracy << "%" << std::endl;
+    std::cout << "Error: " << (100.0 - accuracy) << "%" << std::endl;
+
+    return accuracy;
 }
 
 /*!
